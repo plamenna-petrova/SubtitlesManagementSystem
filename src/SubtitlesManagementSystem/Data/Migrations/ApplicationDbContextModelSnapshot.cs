@@ -309,28 +309,15 @@ namespace SubtitlesManagementSystem.Data.Migrations
 
             modelBuilder.Entity("SubtitlesManagementSystem.Models.Entities.FilmProductionActor", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<string>("FilmProductionId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ActorId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("FilmProductionId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
+                    b.HasKey("FilmProductionId", "ActorId");
 
                     b.HasIndex("ActorId");
-
-                    b.HasIndex("FilmProductionId");
 
                     b.ToTable("FilmProductionActors");
                 });
@@ -418,7 +405,7 @@ namespace SubtitlesManagementSystem.Data.Migrations
                     b.HasOne("SubtitlesManagementSystem.Models.Entities.Country", "Country")
                         .WithMany("FilmProductions")
                         .HasForeignKey("CountryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Country");
@@ -427,7 +414,7 @@ namespace SubtitlesManagementSystem.Data.Migrations
             modelBuilder.Entity("SubtitlesManagementSystem.Models.Entities.FilmProductionActor", b =>
                 {
                     b.HasOne("SubtitlesManagementSystem.Models.Entities.Actor", "Actor")
-                        .WithMany()
+                        .WithMany("FilmProductionActors")
                         .HasForeignKey("ActorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -452,6 +439,11 @@ namespace SubtitlesManagementSystem.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("FilmProduction");
+                });
+
+            modelBuilder.Entity("SubtitlesManagementSystem.Models.Entities.Actor", b =>
+                {
+                    b.Navigation("FilmProductionActors");
                 });
 
             modelBuilder.Entity("SubtitlesManagementSystem.Models.Entities.Country", b =>

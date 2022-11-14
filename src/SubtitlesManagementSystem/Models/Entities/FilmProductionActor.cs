@@ -2,7 +2,7 @@
 
 namespace SubtitlesManagementSystem.Models.Entities
 {
-    public class FilmProductionActor: BaseEntity
+    public class FilmProductionActor
     {
         public string FilmProductionId { get; set; }
 
