@@ -12,8 +12,8 @@ namespace SubtitlesManagementSystem.Controllers
 {
     public class ActorsController : Controller
     {
-        private readonly ApplicationDbContext _context;
-
+        private readonly ApplicationDbContext _context; 
+         
         public ActorsController(ApplicationDbContext context)
         {
             _context = context;
@@ -35,6 +35,7 @@ namespace SubtitlesManagementSystem.Controllers
 
             var actor = await _context.Actors
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (actor == null)
             {
                 return NotFound();

@@ -5,7 +5,6 @@ using System.Diagnostics.Metrics;
 
 namespace SubtitlesManagementSystem.Models.Entities
 {
-
     public class FilmProduction : BaseEntity
     {
         public FilmProduction()
