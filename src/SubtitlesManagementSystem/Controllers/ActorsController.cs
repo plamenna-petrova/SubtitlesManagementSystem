@@ -5,158 +5,181 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using SubtitlesManagementSystem.Business.Services.Actors;
+using SubtitlesManagementSystem.Business.Transactions.Interfaces;
 using SubtitlesManagementSystem.Data;
 using SubtitlesManagementSystem.Models.Entities;
+using SubtitlesManagementSystem.WebModels.Actors.BindingModels;
+using SubtitlesManagementSystem.WebModels.Actors.ViewModels;
 
 namespace SubtitlesManagementSystem.Controllers
 {
-    public class ActorsController : Controller
+    public class ActorsController : BaseController
     {
-        private readonly ApplicationDbContext _context; 
-         
-        public ActorsController(ApplicationDbContext context)
+        private readonly ApplicationDbContext _context;
+
+        private readonly IUnitOfWork _unitOfWork;
+
+        private readonly IActorService _actorService;
+
+        public ActorsController(
+            ApplicationDbContext context,
+            IUnitOfWork unitOfWork,
+            IActorService actorService
+        )
         {
             _context = context;
+            _unitOfWork = unitOfWork;
+            _actorService = actorService;
         }
 
         // GET: Actors
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-              return View(await _context.Actors.ToListAsync());
+            IEnumerable<AllActorsViewModel> allActorsViewModel = _actorService.GetAllActors();
+
+            return View(allActorsViewModel);
         }
 
         // GET: Actors/Details/5
-        public async Task<IActionResult> Details(string id)
+        public IActionResult Details(string id)
         {
-            if (id == null || _context.Actors == null)
+            ActorDetailsViewModel actorDetailsViewModel = _actorService.GetActorDetails(id);
+
+            if (actorDetailsViewModel == null)
             {
                 return NotFound();
             }
 
-            var actor = await _context.Actors
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (actor == null)
-            {
-                return NotFound();
-            }
-
-            return View(actor);
+            return View(actorDetailsViewModel);
         }
 
         // GET: Actors/Create
         public IActionResult Create()
         {
-            return View();
+            return View(new CreateActorBindingModel());
         }
 
         // POST: Actors/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("FirstName,LastName,Id,CreatedOn,ModifiedOn")] Actor actor)
+        public IActionResult Create(CreateActorBindingModel createActorBindingModel)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                _context.Add(actor);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return View(createActorBindingModel);
             }
-            return View(actor);
+
+            bool isNewActorCreated = _actorService.CreateActor(createActorBindingModel);
+
+            if (!isNewActorCreated)
+            {
+                TempData["ActorErrorMessage"] = $"Error, the actor" +
+                    $"{createActorBindingModel.FirstName}" +
+                    $"{createActorBindingModel.LastName} already exists";
+                return View(createActorBindingModel);
+            }
+
+            bool isNewActorSavedToDatabase = _unitOfWork.CommitSaveChanges();
+
+            if (!isNewActorSavedToDatabase)
+            {
+                TempData["ActorErrorMessage"] = "Error, couldn't save the new" +
+                    "actor record";
+                return View(createActorBindingModel);
+            }
+
+            TempData["ActorSuccessMessage"] = $"Actor {createActorBindingModel.FirstName} " +
+                $"{createActorBindingModel.LastName} created successfully!";
+
+            return RedirectToIndexActionInCurrentController();
         }
 
         // GET: Actors/Edit/5
-        public async Task<IActionResult> Edit(string id)
+        public IActionResult Edit(string id)
         {
-            if (id == null || _context.Actors == null)
+            EditActorBindingModel editActorBindingModel = _actorService
+                .GetActorEditingDetails(id);
+
+            if (editActorBindingModel == null)
             {
                 return NotFound();
             }
 
-            var actor = await _context.Actors.FindAsync(id);
-            if (actor == null)
-            {
-                return NotFound();
-            }
-            return View(actor);
+            return View(editActorBindingModel);
         }
 
         // POST: Actors/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("FirstName,LastName,Id,CreatedOn,ModifiedOn")] Actor actor)
+        public IActionResult Edit(EditActorBindingModel editActorBindingModel)
         {
-            if (id != actor.Id)
+            if (!ModelState.IsValid)
             {
-                return NotFound();
+                return View(editActorBindingModel);
             }
 
-            if (ModelState.IsValid)
+            bool isCurrentActorEdited = _actorService.EditActor(editActorBindingModel);
+
+            if (!isCurrentActorEdited)
             {
-                try
-                {
-                    _context.Update(actor);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ActorExists(actor.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                TempData["ActorErrorMessage"] = $"Error, the actor " +
+                $"{editActorBindingModel.FirstName} " +
+                    $"{editActorBindingModel.LastName} already exists";
+                return View(editActorBindingModel);
             }
-            return View(actor);
+
+            bool isCurrentActorUpdateSavedToDatabase = _unitOfWork.CommitSaveChanges();
+
+            if (!isCurrentActorUpdateSavedToDatabase)
+            {
+                TempData["ActorErrorMessage"] = "Error, couldn't save the current" +
+                    "actor update";
+                return View(editActorBindingModel);
+            }
+
+            TempData["ActorSuccessMessage"] = $"Actor {editActorBindingModel.FirstName} " +
+                $"{editActorBindingModel.LastName} edited successfully!";
+
+            return RedirectToIndexActionInCurrentController();
         }
 
         // GET: Actors/Delete/5
-        public async Task<IActionResult> Delete(string id)
+        public IActionResult Delete(string id)
         {
-            if (id == null || _context.Actors == null)
+            DeleteActorViewModel deleteActorViewModel = _actorService
+                .GetActorDeletionDetails(id);
+
+            if (deleteActorViewModel == null)
             {
                 return NotFound();
             }
 
-            var actor = await _context.Actors
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (actor == null)
-            {
-                return NotFound();
-            }
-
-            return View(actor);
+            return View(deleteActorViewModel);
         }
 
         // POST: Actors/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(string id)
+        public IActionResult ConfirmDelete(string id)
         {
-            if (_context.Actors == null)
-            {
-                return Problem("Entity set 'ApplicationDbContext.Actor'  is null.");
-            }
-            var actor = await _context.Actors.FindAsync(id);
-            if (actor != null)
-            {
-                _context.Actors.Remove(actor);
-            }
-            
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
+            Actor actorToDelete = _actorService.FindActor(id);
 
-        private bool ActorExists(string id)
-        {
-          return _context.Actors.Any(e => e.Id == id);
+            _actorService.DeleteActor(actorToDelete.Id);
+
+            bool isActorDeleted = _unitOfWork.CommitSaveChanges();
+
+            if (!isActorDeleted)
+            {
+                TempData["ActorErrorMessage"] = "Error, couldn't delete the actor!";
+                return RedirectToAction(nameof(Delete));
+            }
+
+            TempData["ActorSuccessMessage"] = $"Actor {actorToDelete.FirstName} " +
+                $"{actorToDelete.LastName} deleted successfully!";
+
+            return RedirectToIndexActionInCurrentController();
         }
     }
 }
+

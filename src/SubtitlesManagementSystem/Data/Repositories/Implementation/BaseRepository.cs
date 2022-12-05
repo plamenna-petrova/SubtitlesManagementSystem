@@ -60,9 +60,17 @@ namespace SubtitlesManagementSystem.Data.Repositories.Implementation
             DbSet.UpdateRange(entities);
         }
 
-        public virtual void Delete(TEntity entity)
+        public virtual void Delete(string id)
         {
-            DbSet.Remove(entity);
+            var entityToDelete = GetById(id);
+
+            if (entityToDelete == null)
+            {
+                throw new ArgumentNullException($"The object of type {typeof(TEntity)} " +
+                    $"with id: {id} does not exist");
+            }
+
+            DbSet.Remove(entityToDelete);
         }
 
         public virtual void DeleteRange(TEntity[] entities)

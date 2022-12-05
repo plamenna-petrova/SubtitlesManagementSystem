@@ -1,6 +1,11 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using SubtitlesManagementSystem.Business.Services.Actors;
+using SubtitlesManagementSystem.Business.Transactions.Implementation;
+using SubtitlesManagementSystem.Business.Transactions.Interfaces;
 using SubtitlesManagementSystem.Data;
+using SubtitlesManagementSystem.Data.Repositories.Implementation;
+using SubtitlesManagementSystem.Data.Repositories.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +18,16 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddScoped<IActorRepository, ActorRepository>();
+builder.Services.AddScoped<ICountryRepository, CountryRepository>();
+builder.Services.AddScoped<IFilmProductionRepository, FilmProductionRepository>();
+builder.Services.AddScoped<IFilmProductionActorRepository, FilmProductionActorRepository>();
+builder.Services.AddScoped<ISubtitlesRepository, SubtitlesRepository>();
+
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+builder.Services.AddTransient<IActorService, ActorService>();
 
 var app = builder.Build();
 

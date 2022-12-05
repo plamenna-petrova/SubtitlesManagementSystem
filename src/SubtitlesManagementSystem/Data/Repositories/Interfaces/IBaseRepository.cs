@@ -21,7 +21,7 @@ namespace SubtitlesManagementSystem.Data.Repositories.Interfaces
 
         void UpdateRange(TEntity[] entities);
 
-        void Delete(TEntity entity);
+        void Delete(string id);
 
         void DeleteRange(TEntity[] entities);
 

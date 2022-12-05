@@ -1,17 +1,24 @@
-﻿@model SubtitlesManagementSystem.Models.Entities.Actor
+﻿@model SubtitlesManagementSystem.WebModels.Actors.BindingModels.EditActorBindingModel
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Actor";
 }
 
-<h1>Edit</h1>
+<h3>@ViewData["Title"]</h3>
 
-<h4>Actor</h4>
+<h3>Actor</h3>
 <hr />
+@if (TempData["ActorErrorMessage"] != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @TempData["ActorErrorMessage"]
+    </div>
+}
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
             <div class="form-group">
                 <label asp-for="FirstName" class="control-label"></label>
                 <input asp-for="FirstName" class="form-control" />
@@ -34,5 +41,7 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
