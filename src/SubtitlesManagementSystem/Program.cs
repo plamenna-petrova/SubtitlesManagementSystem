@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SubtitlesManagementSystem.Business.Services.Actors;
+using SubtitlesManagementSystem.Business.Services.Countries;
 using SubtitlesManagementSystem.Business.Transactions.Implementation;
 using SubtitlesManagementSystem.Business.Transactions.Interfaces;
 using SubtitlesManagementSystem.Data;
@@ -28,6 +29,7 @@ builder.Services.AddScoped<ISubtitlesRepository, SubtitlesRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 builder.Services.AddTransient<IActorService, ActorService>();
+builder.Services.AddTransient<ICountryService, CountryService>();
 
 var app = builder.Build();
 

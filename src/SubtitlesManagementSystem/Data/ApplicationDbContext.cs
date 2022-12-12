@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SubtitlesManagementSystem.Models.Entities;
+using SubtitlesManagementSystem.Models.Interfaces;
 
 namespace SubtitlesManagementSystem.Data
 {
@@ -25,12 +26,43 @@ namespace SubtitlesManagementSystem.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            ConfigureEntityRelations(modelBuilder);
+
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
         }
 
-        private void ConfigureEntityRelations(ModelBuilder modelBuilder)
+        public override int SaveChanges()
         {
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+            return SaveChanges(true);
+        }
+
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
+        {
+            this.ApplyEntityChanges();
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+
+        private void ApplyEntityChanges()
+        {
+            var changeTrackerEntries = this.ChangeTracker.Entries()
+               .Where(
+                    x => x.Entity is IAuditInfo &&
+                    (x.State == EntityState.Added || x.State == EntityState.Modified)
+                );
+
+            foreach (var changeTrackerEntry in changeTrackerEntries)
+            {
+                var auditableEntity = (IAuditInfo)changeTrackerEntry.Entity;
+
+                switch (changeTrackerEntry.State)
+                {
+                    case EntityState.Added:
+                        auditableEntity.CreatedOn = DateTime.UtcNow;
+                        break;
+                    case EntityState.Modified:
+                        auditableEntity.ModifiedOn = DateTime.UtcNow;
+                        break;
+                }
+            }
         }
     }
 }
